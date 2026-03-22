@@ -6,7 +6,7 @@
 
 - **Dual Format Support**: Handles both `SAM` (via pipes) and `PAF` formats.
 - **Rare k-mer Fingerprinting**: Filters out repetitive k-mers to focus on unique genomic anchors.
-- **O(n log n) LIS Engine**: Uses an efficient mathematical approach to calculate the best collinear path of anchors.
+- **O(nlogn) LIS Engine**: Uses an efficient mathematical approach to calculate the best collinear path of anchors.
 - **Memory Efficiency**: Implements 2-bit sequence compression to minimize RAM usage for query reads in PAF mode.
 - **Multithreaded Pipeline**: Leverages a producer-consumer model to maximize throughput on multi-core systems.
 - **Zero Dependencies**: Written in standard C++11; easy to compile and deploy.
@@ -35,7 +35,9 @@ Requires a C++11 compatible compiler (e.g., `g++` or `clang++`).
 Bash
 
 ```
-g++ -O3 -std=c++11 -pthread rafilter.cpp -o rafilter
+git clone https://github.com/ruoyu1123/rafilter2.git
+cd rafilter2
+g++ -O3 -std=c++11 -pthread rafilter2.cpp -o rafilter2
 
 ```
 
@@ -46,7 +48,7 @@ g++ -O3 -std=c++11 -pthread rafilter.cpp -o rafilter
 Bash
 
 ```
-rafilter2 [options] <ref.fa> <in.aln> [query.fa]
+rafilter2 [options] <ref.fa> <SAM/PAF> [query.fa]
 
 ```
 
@@ -62,8 +64,6 @@ rafilter2 [options] <ref.fa> <in.aln> [query.fa]
 | `-f STR` | Input format: `sam` or `paf` | auto-detect |
 | `-o FILE` | Output file name | stdout |
 
-导出到 Google 表格
-
 ### Examples
 
 **1. Filtering SAM stream (with samtools)**
@@ -71,7 +71,11 @@ rafilter2 [options] <ref.fa> <in.aln> [query.fa]
 Bash
 
 ```
-samtools view -h input.bam | rafilter2 -k 21 -n 4 -t 8 -o filtered.sam ref.fasta -
+# for sam file
+rafilter2 -k 21 -n 1 -t 16 -o filtered.sam input.sam ref.fasta 
+
+# for bam file 
+samtools view -h input.bam | rafilter2 -k 21 -n 1 -t 8 -o filtered.sam ref.fasta -
 
 ```
 
@@ -84,8 +88,12 @@ Bash
 ./rafilter2 -c 20 -t 16 ref.fasta alignments.paf queries.fasta > high_quality.paf
 
 ```
+**We strongly recommend using the SAM format for input.**
+
 
 **3. Tagging alignments without removing them**
+
+tag mode will add a tag value of "km:i:KMAPQ" in all alignments.  
 
 Bash
 
@@ -94,10 +102,10 @@ Bash
 
 ```
 
+
 ## ⚠️ Important Notes
 
-- **Memory Usage**: The reference genome and rare k-mer map are stored in RAM. For the human genome, expect ~8-16 GB of memory consumption.
+- **Memory Usage**: The reference genome and rare k-mer map are stored in RAM. For the human genome, expect ~200 GB of memory consumption.
 - **N Bases**: Any k-mer containing 'N' (or non-ACGT bases) is ignored.
 - **PAF Mode**: Entire query sequences are loaded into memory (compressed) to allow random access during validation.
 
-**Would you like me to help you implement support for Gzip compressed inputs or add a detailed performance benchmarking section?**
